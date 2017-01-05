@@ -8678,19 +8678,23 @@ var _elm_lang$svg$Svg_Attributes$additive = _elm_lang$virtual_dom$VirtualDom$att
 var _elm_lang$svg$Svg_Attributes$accumulate = _elm_lang$virtual_dom$VirtualDom$attribute('accumulate');
 var _elm_lang$svg$Svg_Attributes$accelerate = _elm_lang$virtual_dom$VirtualDom$attribute('accelerate');
 var _elm_lang$svg$Svg_Attributes$accentHeight = _elm_lang$virtual_dom$VirtualDom$attribute('accent-height');
-var _user$project$Metronome$updateAngle = function (model) {
-	return _elm_lang$core$Native_Utils.update(
-		model,
-		{
-			angle: model.angle + (model.timeDiff / _elm_lang$core$Basics$toFloat(model.bpm))
-		});
+var _user$project$Metronome$calculateSpeed = F2(
+	function (beats, bpm) {
+		var tau = 2 * _elm_lang$core$Basics$pi;
+		var rpm = (1 / _elm_lang$core$Basics$toFloat(beats)) * _elm_lang$core$Basics$toFloat(bpm);
+		return tau * (rpm / 60000);
+	});
+var _user$project$Metronome$newAngle = function (model) {
+	return model.angle + (model.timeDiff * model.speed);
 };
 var _user$project$Metronome$updateModel = F2(
 	function (model, deltaT) {
-		return _user$project$Metronome$updateAngle(
-			_elm_lang$core$Native_Utils.update(
-				model,
-				{timeDiff: deltaT}));
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				timeDiff: deltaT,
+				angle: _user$project$Metronome$newAngle(model)
+			});
 	});
 var _user$project$Metronome$view = function (model) {
 	var newY = _elm_lang$core$Basics$toString(
@@ -8765,15 +8769,22 @@ var _user$project$Metronome$update = F2(
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	});
-var _user$project$Metronome$Model = F3(
-	function (a, b, c) {
-		return {angle: a, timeDiff: b, bpm: c};
+var _user$project$Metronome$Model = F5(
+	function (a, b, c, d, e) {
+		return {angle: a, timeDiff: b, beats: c, bpm: d, speed: e};
 	});
-var _user$project$Metronome$init = {
-	ctor: '_Tuple2',
-	_0: A3(_user$project$Metronome$Model, (3 * _elm_lang$core$Basics$pi) / 2, 0, 60),
-	_1: _elm_lang$core$Platform_Cmd$none
-};
+var _user$project$Metronome$init = function () {
+	var bpm = 60;
+	var beats = 4;
+	var speed = A2(_user$project$Metronome$calculateSpeed, beats, bpm);
+	var timeDiff = 0;
+	var angle = (3 * _elm_lang$core$Basics$pi) / 2;
+	return {
+		ctor: '_Tuple2',
+		_0: A5(_user$project$Metronome$Model, angle, timeDiff, beats, bpm, speed),
+		_1: _elm_lang$core$Platform_Cmd$none
+	};
+}();
 var _user$project$Metronome$TimeUpdate = function (a) {
 	return {ctor: 'TimeUpdate', _0: a};
 };

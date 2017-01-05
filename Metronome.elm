@@ -15,14 +15,27 @@ main =
         }
 
 type alias Model =
-    { angle : Float,
-      timeDiff : Time,
-      bpm : Int
+    { angle : Float
+    , timeDiff : Time
+    , beats : Int
+    , bpm : Int
+    , speed : Float
     }
 
 init : (Model, Cmd Msg)
 init =
-    ((Model ((3 * pi) / 2) 0 60), Cmd.none)
+    let angle =
+            ((3 * pi) / 2)
+        timeDiff =
+            0
+        beats =
+            4
+        bpm =
+            60
+        speed =
+            calculateSpeed beats bpm
+    in
+        ((Model angle timeDiff beats bpm speed), Cmd.none)
 
 type Msg
     = TimeUpdate Time
@@ -52,9 +65,17 @@ view model =
 
 updateModel : Model -> Time -> Model
 updateModel model deltaT =
-    { model | timeDiff = deltaT }
-    |> updateAngle
+    { model | timeDiff = deltaT, angle = (newAngle model) }
 
-updateAngle : Model -> Model
-updateAngle model =
-    { model | angle = model.angle + (model.timeDiff / (toFloat model.bpm)) }
+newAngle : Model -> Float
+newAngle model =
+    model.angle + model.timeDiff * model.speed
+
+calculateSpeed : Int -> Int -> Float
+calculateSpeed beats bpm =
+    let rpm =
+            (1 / (toFloat beats)) * (toFloat bpm)
+        tau =
+            (2 * pi)
+    in
+        tau * (rpm / 60000)
