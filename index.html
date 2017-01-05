@@ -9150,15 +9150,6 @@ var _user$project$Metronome$calculateSpeed = F2(
 var _user$project$Metronome$newAngle = function (model) {
 	return model.angle + (model.timeDiff * model.speed);
 };
-var _user$project$Metronome$updateBpm = F2(
-	function (model, newBpm) {
-		return _elm_lang$core$Native_Utils.update(
-			model,
-			{
-				bpm: newBpm,
-				speed: A2(_user$project$Metronome$calculateSpeed, model.beats, newBpm)
-			});
-	});
 var _user$project$Metronome$updatePosition = F2(
 	function (model, deltaT) {
 		return _elm_lang$core$Native_Utils.update(
@@ -9166,6 +9157,20 @@ var _user$project$Metronome$updatePosition = F2(
 			{
 				timeDiff: deltaT,
 				angle: _user$project$Metronome$newAngle(model)
+			});
+	});
+var _user$project$Metronome$defaultBpm = 60;
+var _user$project$Metronome$defaultNoteLength = 4;
+var _user$project$Metronome$defaultBeats = 4;
+var _user$project$Metronome$defaultAngle = (3 * _elm_lang$core$Basics$pi) / 2;
+var _user$project$Metronome$updateBpm = F2(
+	function (model, newBpm) {
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{
+				bpm: newBpm,
+				angle: _user$project$Metronome$defaultAngle,
+				speed: A2(_user$project$Metronome$calculateSpeed, model.beats, newBpm)
 			});
 	});
 var _user$project$Metronome$update = F2(
@@ -9193,19 +9198,19 @@ var _user$project$Metronome$update = F2(
 			};
 		}
 	});
-var _user$project$Metronome$Model = F5(
-	function (a, b, c, d, e) {
-		return {angle: a, timeDiff: b, beats: c, bpm: d, speed: e};
+var _user$project$Metronome$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {angle: a, timeDiff: b, beats: c, noteLength: d, bpm: e, speed: f};
 	});
 var _user$project$Metronome$init = function () {
-	var bpm = 60;
-	var beats = 4;
+	var bpm = _user$project$Metronome$defaultBpm;
+	var noteLength = _user$project$Metronome$defaultNoteLength;
+	var beats = _user$project$Metronome$defaultBeats;
 	var speed = A2(_user$project$Metronome$calculateSpeed, beats, bpm);
 	var timeDiff = 0;
-	var angle = (3 * _elm_lang$core$Basics$pi) / 2;
 	return {
 		ctor: '_Tuple2',
-		_0: A5(_user$project$Metronome$Model, angle, timeDiff, beats, bpm, speed),
+		_0: A6(_user$project$Metronome$Model, _user$project$Metronome$defaultAngle, timeDiff, beats, noteLength, bpm, speed),
 		_1: _elm_lang$core$Platform_Cmd$none
 	};
 }();
@@ -9260,58 +9265,93 @@ var _user$project$Metronome$view = function (model) {
 			_1: {
 				ctor: '::',
 				_0: A2(
-					_elm_lang$svg$Svg$svg,
-					{
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 100 100'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$width('300px'),
-							_1: {ctor: '[]'}
-						}
-					},
+					_elm_lang$html$Html$div,
+					{ctor: '[]'},
 					{
 						ctor: '::',
 						_0: A2(
-							_elm_lang$svg$Svg$circle,
+							_elm_lang$html$Html$label,
+							{ctor: '[]'},
 							{
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$cx('50'),
+								_0: _elm_lang$html$Html$text('Time Signature'),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$cy('50'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$r('45'),
-										_1: {
+									_0: A2(
+										_elm_lang$html$Html$input,
+										{
 											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$stroke('#bada55'),
+											_0: _elm_lang$svg$Svg_Attributes$type_('text'),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$fill('none'),
-												_1: {ctor: '[]'}
+												_0: _elm_lang$html$Html_Attributes$disabled(true),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html_Attributes$value(
+														_elm_lang$core$Basics$toString(model.beats)),
+													_1: {ctor: '[]'}
+												}
 											}
+										},
+										{ctor: '[]'}),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(' / '),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$input,
+												{
+													ctor: '::',
+													_0: _elm_lang$svg$Svg_Attributes$type_('text'),
+													_1: {
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$disabled(true),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$value(
+																_elm_lang$core$Basics$toString(model.noteLength)),
+															_1: {ctor: '[]'}
+														}
+													}
+												},
+												{ctor: '[]'}),
+											_1: {ctor: '[]'}
 										}
 									}
 								}
-							},
-							{ctor: '[]'}),
-						_1: {
+							}),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$svg$Svg$svg,
+						{
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$viewBox('0 0 100 100'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$width('300px'),
+								_1: {ctor: '[]'}
+							}
+						},
+						{
 							ctor: '::',
 							_0: A2(
 								_elm_lang$svg$Svg$circle,
 								{
 									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$cx(newX),
+									_0: _elm_lang$svg$Svg_Attributes$cx('50'),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$cy(newY),
+										_0: _elm_lang$svg$Svg_Attributes$cy('50'),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$r('3'),
+											_0: _elm_lang$svg$Svg_Attributes$r('45'),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$stroke('#666666'),
+												_0: _elm_lang$svg$Svg_Attributes$stroke('#bada55'),
 												_1: {
 													ctor: '::',
 													_0: _elm_lang$svg$Svg_Attributes$fill('none'),
@@ -9322,10 +9362,37 @@ var _user$project$Metronome$view = function (model) {
 									}
 								},
 								{ctor: '[]'}),
-							_1: {ctor: '[]'}
-						}
-					}),
-				_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$svg$Svg$circle,
+									{
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$cx(newX),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Attributes$cy(newY),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$svg$Svg_Attributes$r('3'),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$svg$Svg_Attributes$stroke('#666666'),
+													_1: {
+														ctor: '::',
+														_0: _elm_lang$svg$Svg_Attributes$fill('none'),
+														_1: {ctor: '[]'}
+													}
+												}
+											}
+										}
+									},
+									{ctor: '[]'}),
+								_1: {ctor: '[]'}
+							}
+						}),
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };

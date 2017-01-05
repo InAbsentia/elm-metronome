@@ -1,7 +1,7 @@
 module Metronome exposing (..)
 
 import Html exposing (Html, div, input, label)
-import Html.Attributes exposing (value)
+import Html.Attributes exposing (disabled, value)
 import Html.Events exposing (onInput)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
@@ -22,30 +22,47 @@ type alias Model =
     { angle : Float
     , timeDiff : Time
     , beats : Int
+    , noteLength : Int
     , bpm : Int
     , speed : Float
     }
 
 
+defaultAngle =
+    ((3 * pi) / 2)
+
+
+defaultBeats =
+    4
+
+
+defaultNoteLength =
+    4
+
+
+defaultBpm =
+    60
+
+
 init : ( Model, Cmd Msg )
 init =
     let
-        angle =
-            ((3 * pi) / 2)
-
         timeDiff =
             0
 
         beats =
-            4
+            defaultBeats
+
+        noteLength =
+            defaultNoteLength
 
         bpm =
-            60
+            defaultBpm
 
         speed =
             calculateSpeed beats bpm
     in
-        ( (Model angle timeDiff beats bpm speed), Cmd.none )
+        ( (Model defaultAngle timeDiff beats noteLength bpm speed), Cmd.none )
 
 
 type Msg
@@ -93,6 +110,14 @@ view model =
                     , input [ type_ "text", value (toString model.bpm), onInput BpmUpdate ] []
                     ]
                 ]
+            , div []
+                [ label []
+                    [ Html.text "Time Signature"
+                    , input [ type_ "text", disabled True, value (toString model.beats) ] []
+                    , Html.text " / "
+                    , input [ type_ "text", disabled True, value (toString model.noteLength) ] []
+                    ]
+                ]
             , svg [ viewBox "0 0 100 100", width "300px" ]
                 [ circle [ cx "50", cy "50", r "45", stroke "#bada55", fill "none" ] []
                 , circle [ cx newX, cy newY, r "3", stroke "#666666", fill "none" ] []
@@ -107,7 +132,7 @@ updatePosition model deltaT =
 
 updateBpm : Model -> Int -> Model
 updateBpm model newBpm =
-    { model | bpm = newBpm, speed = (calculateSpeed model.beats newBpm) }
+    { model | bpm = newBpm, angle = defaultAngle, speed = (calculateSpeed model.beats newBpm) }
 
 
 newAngle : Model -> Float
