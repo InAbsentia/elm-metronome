@@ -94,8 +94,8 @@ view model =
                     ]
                 ]
             , svg [ viewBox "0 0 100 100", width "300px" ]
-                [ circle [ cx "50", cy "50", r "45", fill "#bada55" ] []
-                , circle [ cx newX, cy newY, r "3", fill "#666666" ] []
+                [ circle [ cx "50", cy "50", r "45", stroke "#bada55", fill "none" ] []
+                , circle [ cx newX, cy newY, r "3", stroke "#666666", fill "none" ] []
                 ]
             ]
 
