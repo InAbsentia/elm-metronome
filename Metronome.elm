@@ -118,11 +118,42 @@ view model =
                     , input [ type_ "text", disabled True, value (toString model.noteLength) ] []
                     ]
                 ]
-            , svg [ viewBox "0 0 100 100", width "300px" ]
-                [ circle [ cx "50", cy "50", r "45", stroke "#bada55", fill "none" ] []
-                , circle [ cx newX, cy newY, r "3", stroke "#666666", fill "none" ] []
-                ]
+            , svg [ viewBox "0 0 100 100", width "300px" ] (buildFace ( newX, newY ) model.beats)
             ]
+
+
+buildFace : ( String, String ) -> Int -> List (Svg Msg)
+buildFace ( newX, newY ) beats =
+    List.concat
+        [ [ circle [ cx "50", cy "50", r "45", stroke "#BADA55", fill "none" ] [] ]
+        , (beatMarkers beats)
+        , [ circle [ cx newX, cy newY, r "3", stroke "#666666", fill "none" ] [] ]
+        ]
+
+
+beatMarkers : Int -> List (Svg Msg)
+beatMarkers n =
+    buildMarkers [] defaultAngle (360 / toFloat n) n
+
+
+buildMarkers : List (Svg Msg) -> Float -> Float -> Int -> List (Svg Msg)
+buildMarkers acc pos inc n =
+    if n <= 0 then
+        acc
+    else
+        buildMarkers (buildMarker pos :: acc) (pos + degrees inc) inc (n - 1)
+
+
+buildMarker : Float -> Svg Msg
+buildMarker angle =
+    let
+        markerX =
+            toString (50 + 45 * cos angle)
+
+        markerY =
+            toString (50 + 45 * sin angle)
+    in
+        circle [ cx markerX, cy markerY, r "3", fill "#999999" ] []
 
 
 updatePosition : Model -> Time -> Model

@@ -9159,10 +9159,139 @@ var _user$project$Metronome$updatePosition = F2(
 				angle: _user$project$Metronome$newAngle(model)
 			});
 	});
+var _user$project$Metronome$buildMarker = function (angle) {
+	var markerY = _elm_lang$core$Basics$toString(
+		50 + (45 * _elm_lang$core$Basics$sin(angle)));
+	var markerX = _elm_lang$core$Basics$toString(
+		50 + (45 * _elm_lang$core$Basics$cos(angle)));
+	return A2(
+		_elm_lang$svg$Svg$circle,
+		{
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$cx(markerX),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$cy(markerY),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$r('3'),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$fill('#999999'),
+						_1: {ctor: '[]'}
+					}
+				}
+			}
+		},
+		{ctor: '[]'});
+};
+var _user$project$Metronome$buildMarkers = F4(
+	function (acc, pos, inc, n) {
+		buildMarkers:
+		while (true) {
+			if (_elm_lang$core$Native_Utils.cmp(n, 0) < 1) {
+				return acc;
+			} else {
+				var _v0 = {
+					ctor: '::',
+					_0: _user$project$Metronome$buildMarker(pos),
+					_1: acc
+				},
+					_v1 = pos + _elm_lang$core$Basics$degrees(inc),
+					_v2 = inc,
+					_v3 = n - 1;
+				acc = _v0;
+				pos = _v1;
+				inc = _v2;
+				n = _v3;
+				continue buildMarkers;
+			}
+		}
+	});
 var _user$project$Metronome$defaultBpm = 60;
 var _user$project$Metronome$defaultNoteLength = 4;
 var _user$project$Metronome$defaultBeats = 4;
 var _user$project$Metronome$defaultAngle = (3 * _elm_lang$core$Basics$pi) / 2;
+var _user$project$Metronome$beatMarkers = function (n) {
+	return A4(
+		_user$project$Metronome$buildMarkers,
+		{ctor: '[]'},
+		_user$project$Metronome$defaultAngle,
+		360 / _elm_lang$core$Basics$toFloat(n),
+		n);
+};
+var _user$project$Metronome$buildFace = F2(
+	function (_p0, beats) {
+		var _p1 = _p0;
+		return _elm_lang$core$List$concat(
+			{
+				ctor: '::',
+				_0: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$svg$Svg$circle,
+						{
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$cx('50'),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$cy('50'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$r('45'),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$stroke('#BADA55'),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Attributes$fill('none'),
+											_1: {ctor: '[]'}
+										}
+									}
+								}
+							}
+						},
+						{ctor: '[]'}),
+					_1: {ctor: '[]'}
+				},
+				_1: {
+					ctor: '::',
+					_0: _user$project$Metronome$beatMarkers(beats),
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$svg$Svg$circle,
+								{
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$cx(_p1._0),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$cy(_p1._1),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Attributes$r('3'),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$svg$Svg_Attributes$stroke('#666666'),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$svg$Svg_Attributes$fill('none'),
+													_1: {ctor: '[]'}
+												}
+											}
+										}
+									}
+								},
+								{ctor: '[]'}),
+							_1: {ctor: '[]'}
+						},
+						_1: {ctor: '[]'}
+					}
+				}
+			});
+	});
 var _user$project$Metronome$updateBpm = F2(
 	function (model, newBpm) {
 		return _elm_lang$core$Native_Utils.update(
@@ -9175,20 +9304,20 @@ var _user$project$Metronome$updateBpm = F2(
 	});
 var _user$project$Metronome$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		if (_p0.ctor === 'TimeUpdate') {
+		var _p2 = msg;
+		if (_p2.ctor === 'TimeUpdate') {
 			return {
 				ctor: '_Tuple2',
-				_0: A2(_user$project$Metronome$updatePosition, model, _p0._0),
+				_0: A2(_user$project$Metronome$updatePosition, model, _p2._0),
 				_1: _elm_lang$core$Platform_Cmd$none
 			};
 		} else {
 			var intBpm = function () {
-				var _p1 = _elm_lang$core$String$toInt(_p0._0);
-				if (_p1.ctor === 'Err') {
+				var _p3 = _elm_lang$core$String$toInt(_p2._0);
+				if (_p3.ctor === 'Err') {
 					return 0;
 				} else {
-					return _p1._0;
+					return _p3._0;
 				}
 			}();
 			return {
@@ -9336,61 +9465,10 @@ var _user$project$Metronome$view = function (model) {
 								_1: {ctor: '[]'}
 							}
 						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$svg$Svg$circle,
-								{
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$cx('50'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$cy('50'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$r('45'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$stroke('#bada55'),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$svg$Svg_Attributes$fill('none'),
-													_1: {ctor: '[]'}
-												}
-											}
-										}
-									}
-								},
-								{ctor: '[]'}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$svg$Svg$circle,
-									{
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$cx(newX),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$cy(newY),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$r('3'),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$svg$Svg_Attributes$stroke('#666666'),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$svg$Svg_Attributes$fill('none'),
-														_1: {ctor: '[]'}
-													}
-												}
-											}
-										}
-									},
-									{ctor: '[]'}),
-								_1: {ctor: '[]'}
-							}
-						}),
+						A2(
+							_user$project$Metronome$buildFace,
+							{ctor: '_Tuple2', _0: newX, _1: newY},
+							model.beats)),
 					_1: {ctor: '[]'}
 				}
 			}
