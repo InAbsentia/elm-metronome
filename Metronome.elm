@@ -21,10 +21,17 @@ main =
 type alias Model =
     { angle : Float
     , timeDiff : Time
-    , beats : Int
+    , beatCount : Int
     , noteLength : Int
     , bpm : Int
     , speed : Float
+    , beats : List Beat
+    }
+
+
+type alias Beat =
+    { x : Float
+    , y : Float
     }
 
 
@@ -32,7 +39,7 @@ defaultAngle =
     ((3 * pi) / 2)
 
 
-defaultBeats =
+defaultBeatCount =
     4
 
 
@@ -50,8 +57,8 @@ init =
         timeDiff =
             0
 
-        beats =
-            defaultBeats
+        beatCount =
+            defaultBeatCount
 
         noteLength =
             defaultNoteLength
@@ -60,9 +67,12 @@ init =
             defaultBpm
 
         speed =
-            calculateSpeed beats bpm
+            calculateSpeed beatCount bpm
+
+        beats =
+            calculateBeats beatCount
     in
-        ( (Model defaultAngle timeDiff beats noteLength bpm speed), Cmd.none )
+        ( (Model defaultAngle timeDiff beatCount noteLength bpm speed beats), Cmd.none )
 
 
 type Msg
@@ -113,7 +123,7 @@ view model =
             , div []
                 [ label []
                     [ Html.text "Time Signature"
-                    , input [ type_ "text", disabled True, value (toString model.beats) ] []
+                    , input [ type_ "text", disabled True, value (toString model.beatCount) ] []
                     , Html.text " / "
                     , input [ type_ "text", disabled True, value (toString model.noteLength) ] []
                     ]
@@ -122,7 +132,7 @@ view model =
             ]
 
 
-buildFace : ( String, String ) -> Int -> List (Svg Msg)
+buildFace : ( String, String ) -> List Beat -> List (Svg Msg)
 buildFace ( newX, newY ) beats =
     List.concat
         [ [ circle [ cx "50", cy "50", r "45", stroke "#BADA55", fill "none" ] [] ]
@@ -131,27 +141,53 @@ buildFace ( newX, newY ) beats =
         ]
 
 
-beatMarkers : Int -> List (Svg Msg)
-beatMarkers n =
-    buildMarkers [] defaultAngle (360 / toFloat n) n
+calculateBeats : Int -> List Beat
+calculateBeats n =
+    beatReducer [] defaultAngle (360 / toFloat n) n
 
 
-buildMarkers : List (Svg Msg) -> Float -> Float -> Int -> List (Svg Msg)
-buildMarkers acc pos inc n =
-    if n <= 0 then
-        acc
+beatReducer accumulator position increment counter =
+    if counter <= 0 then
+        accumulator
     else
-        buildMarkers (buildMarker pos :: acc) (pos + degrees inc) inc (n - 1)
+        let
+            beat =
+                buildBeat position
+
+            nextAngle =
+                position + degrees increment
+
+            nextCounter =
+                counter - 1
+        in
+            beatReducer (beat :: accumulator) nextAngle increment nextCounter
 
 
-buildMarker : Float -> Svg Msg
-buildMarker angle =
+buildBeat : Float -> Beat
+buildBeat angle =
+    let
+        x =
+            50 + 45 * cos angle
+
+        y =
+            50 + 45 * sin angle
+    in
+        Beat x y
+
+
+beatMarkers : List Beat -> List (Svg Msg)
+beatMarkers beats =
+    List.map buildMarker beats
+
+
+buildMarker : Beat -> Svg Msg
+buildMarker beat =
     let
         markerX =
-            toString (50 + 45 * cos angle)
+            toString beat.x
 
         markerY =
-            toString (50 + 45 * sin angle)
+            toString beat.y
     in
         circle [ cx markerX, cy markerY, r "3", fill "#999999" ] []
 
@@ -163,7 +199,7 @@ updatePosition model deltaT =
 
 updateBpm : Model -> Int -> Model
 updateBpm model newBpm =
-    { model | bpm = newBpm, angle = defaultAngle, speed = (calculateSpeed model.beats newBpm) }
+    { model | bpm = newBpm, angle = defaultAngle, speed = (calculateSpeed model.beatCount newBpm) }
 
 
 newAngle : Model -> Float

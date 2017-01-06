@@ -9159,11 +9159,9 @@ var _user$project$Metronome$updatePosition = F2(
 				angle: _user$project$Metronome$newAngle(model)
 			});
 	});
-var _user$project$Metronome$buildMarker = function (angle) {
-	var markerY = _elm_lang$core$Basics$toString(
-		50 + (45 * _elm_lang$core$Basics$sin(angle)));
-	var markerX = _elm_lang$core$Basics$toString(
-		50 + (45 * _elm_lang$core$Basics$cos(angle)));
+var _user$project$Metronome$buildMarker = function (beat) {
+	var markerY = _elm_lang$core$Basics$toString(beat.y);
+	var markerX = _elm_lang$core$Basics$toString(beat.x);
 	return A2(
 		_elm_lang$svg$Svg$circle,
 		{
@@ -9185,40 +9183,8 @@ var _user$project$Metronome$buildMarker = function (angle) {
 		},
 		{ctor: '[]'});
 };
-var _user$project$Metronome$buildMarkers = F4(
-	function (acc, pos, inc, n) {
-		buildMarkers:
-		while (true) {
-			if (_elm_lang$core$Native_Utils.cmp(n, 0) < 1) {
-				return acc;
-			} else {
-				var _v0 = {
-					ctor: '::',
-					_0: _user$project$Metronome$buildMarker(pos),
-					_1: acc
-				},
-					_v1 = pos + _elm_lang$core$Basics$degrees(inc),
-					_v2 = inc,
-					_v3 = n - 1;
-				acc = _v0;
-				pos = _v1;
-				inc = _v2;
-				n = _v3;
-				continue buildMarkers;
-			}
-		}
-	});
-var _user$project$Metronome$defaultBpm = 60;
-var _user$project$Metronome$defaultNoteLength = 4;
-var _user$project$Metronome$defaultBeats = 4;
-var _user$project$Metronome$defaultAngle = (3 * _elm_lang$core$Basics$pi) / 2;
-var _user$project$Metronome$beatMarkers = function (n) {
-	return A4(
-		_user$project$Metronome$buildMarkers,
-		{ctor: '[]'},
-		_user$project$Metronome$defaultAngle,
-		360 / _elm_lang$core$Basics$toFloat(n),
-		n);
+var _user$project$Metronome$beatMarkers = function (beats) {
+	return A2(_elm_lang$core$List$map, _user$project$Metronome$buildMarker, beats);
 };
 var _user$project$Metronome$buildFace = F2(
 	function (_p0, beats) {
@@ -9292,6 +9258,10 @@ var _user$project$Metronome$buildFace = F2(
 				}
 			});
 	});
+var _user$project$Metronome$defaultBpm = 60;
+var _user$project$Metronome$defaultNoteLength = 4;
+var _user$project$Metronome$defaultBeatCount = 4;
+var _user$project$Metronome$defaultAngle = (3 * _elm_lang$core$Basics$pi) / 2;
 var _user$project$Metronome$updateBpm = F2(
 	function (model, newBpm) {
 		return _elm_lang$core$Native_Utils.update(
@@ -9299,7 +9269,7 @@ var _user$project$Metronome$updateBpm = F2(
 			{
 				bpm: newBpm,
 				angle: _user$project$Metronome$defaultAngle,
-				speed: A2(_user$project$Metronome$calculateSpeed, model.beats, newBpm)
+				speed: A2(_user$project$Metronome$calculateSpeed, model.beatCount, newBpm)
 			});
 	});
 var _user$project$Metronome$update = F2(
@@ -9327,19 +9297,59 @@ var _user$project$Metronome$update = F2(
 			};
 		}
 	});
-var _user$project$Metronome$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {angle: a, timeDiff: b, beats: c, noteLength: d, bpm: e, speed: f};
+var _user$project$Metronome$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {angle: a, timeDiff: b, beatCount: c, noteLength: d, bpm: e, speed: f, beats: g};
 	});
+var _user$project$Metronome$Beat = F2(
+	function (a, b) {
+		return {x: a, y: b};
+	});
+var _user$project$Metronome$buildBeat = function (angle) {
+	var y = 50 + (45 * _elm_lang$core$Basics$sin(angle));
+	var x = 50 + (45 * _elm_lang$core$Basics$cos(angle));
+	return A2(_user$project$Metronome$Beat, x, y);
+};
+var _user$project$Metronome$beatReducer = F4(
+	function (accumulator, position, increment, counter) {
+		beatReducer:
+		while (true) {
+			if (_elm_lang$core$Native_Utils.cmp(counter, 0) < 1) {
+				return accumulator;
+			} else {
+				var nextCounter = counter - 1;
+				var nextAngle = position + _elm_lang$core$Basics$degrees(increment);
+				var beat = _user$project$Metronome$buildBeat(position);
+				var _v3 = {ctor: '::', _0: beat, _1: accumulator},
+					_v4 = nextAngle,
+					_v5 = increment,
+					_v6 = nextCounter;
+				accumulator = _v3;
+				position = _v4;
+				increment = _v5;
+				counter = _v6;
+				continue beatReducer;
+			}
+		}
+	});
+var _user$project$Metronome$calculateBeats = function (n) {
+	return A4(
+		_user$project$Metronome$beatReducer,
+		{ctor: '[]'},
+		_user$project$Metronome$defaultAngle,
+		360 / _elm_lang$core$Basics$toFloat(n),
+		n);
+};
 var _user$project$Metronome$init = function () {
 	var bpm = _user$project$Metronome$defaultBpm;
 	var noteLength = _user$project$Metronome$defaultNoteLength;
-	var beats = _user$project$Metronome$defaultBeats;
-	var speed = A2(_user$project$Metronome$calculateSpeed, beats, bpm);
+	var beatCount = _user$project$Metronome$defaultBeatCount;
+	var speed = A2(_user$project$Metronome$calculateSpeed, beatCount, bpm);
+	var beats = _user$project$Metronome$calculateBeats(beatCount);
 	var timeDiff = 0;
 	return {
 		ctor: '_Tuple2',
-		_0: A6(_user$project$Metronome$Model, _user$project$Metronome$defaultAngle, timeDiff, beats, noteLength, bpm, speed),
+		_0: A7(_user$project$Metronome$Model, _user$project$Metronome$defaultAngle, timeDiff, beatCount, noteLength, bpm, speed, beats),
 		_1: _elm_lang$core$Platform_Cmd$none
 	};
 }();
@@ -9417,7 +9427,7 @@ var _user$project$Metronome$view = function (model) {
 												_1: {
 													ctor: '::',
 													_0: _elm_lang$html$Html_Attributes$value(
-														_elm_lang$core$Basics$toString(model.beats)),
+														_elm_lang$core$Basics$toString(model.beatCount)),
 													_1: {ctor: '[]'}
 												}
 											}
