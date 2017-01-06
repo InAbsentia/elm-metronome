@@ -20,23 +20,40 @@ main =
 
 type alias Model =
     { angle : Float
+    , sweepCenter : Point
     , timeDiff : Time
     , beatCount : Int
     , noteLength : Int
     , bpm : Int
     , speed : Float
-    , beats : List Beat
+    , beats : List Point
     }
 
 
-type alias Beat =
+type alias Point =
     { x : Float
     , y : Float
     }
 
 
+tau =
+    2 * pi
+
+
+markerRadius =
+    3
+
+
+faceCenter =
+    Point 50 50
+
+
+faceRadius =
+    45
+
+
 defaultAngle =
-    ((3 * pi) / 2)
+    3 * tau / 4
 
 
 defaultBeatCount =
@@ -54,6 +71,9 @@ defaultBpm =
 init : ( Model, Cmd Msg )
 init =
     let
+        center =
+            pointOnFace defaultAngle
+
         timeDiff =
             0
 
@@ -72,7 +92,19 @@ init =
         beats =
             calculateBeats beatCount
     in
-        ( (Model defaultAngle timeDiff beatCount noteLength bpm speed beats), Cmd.none )
+        ( (Model defaultAngle center timeDiff beatCount noteLength bpm speed beats), Cmd.none )
+
+
+pointOnFace : Float -> Point
+pointOnFace angle =
+    let
+        x =
+            (faceCenter.x + faceRadius * cos angle)
+
+        y =
+            (faceCenter.y + faceRadius * sin angle)
+    in
+        Point x y
 
 
 type Msg
@@ -106,56 +138,56 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-    let
-        newX =
-            toString (50 + 45 * cos model.angle)
-
-        newY =
-            toString (50 + 45 * sin model.angle)
-    in
-        div []
-            [ div []
-                [ label []
-                    [ Html.text "BPM"
-                    , input [ type_ "text", value (toString model.bpm), onInput BpmUpdate ] []
-                    ]
+    div []
+        [ div []
+            [ label []
+                [ Html.text "BPM"
+                , input [ type_ "text", value (toString model.bpm), onInput BpmUpdate ] []
                 ]
-            , div []
-                [ label []
-                    [ Html.text "Time Signature"
-                    , input [ type_ "text", disabled True, value (toString model.beatCount) ] []
-                    , Html.text " / "
-                    , input [ type_ "text", disabled True, value (toString model.noteLength) ] []
-                    ]
-                ]
-            , svg [ viewBox "0 0 100 100", width "300px" ] (buildFace ( newX, newY ) model.beats)
             ]
-
-
-buildFace : ( String, String ) -> List Beat -> List (Svg Msg)
-buildFace ( newX, newY ) beats =
-    List.concat
-        [ [ circle [ cx "50", cy "50", r "45", stroke "#BADA55", fill "none" ] [] ]
-        , (beatMarkers beats)
-        , [ circle [ cx newX, cy newY, r "3", stroke "#666666", fill "none" ] [] ]
+        , div []
+            [ label []
+                [ Html.text "Time Signature"
+                , input [ type_ "text", disabled True, value (toString model.beatCount) ] []
+                , Html.text " / "
+                , input [ type_ "text", disabled True, value (toString model.noteLength) ] []
+                ]
+            ]
+        , svg [ viewBox "0 0 100 100", width "300px" ] (buildFace model)
         ]
 
 
-calculateBeats : Int -> List Beat
+buildFace : Model -> List (Svg Msg)
+buildFace { sweepCenter, beats } =
+    let
+        x =
+            toString sweepCenter.x
+
+        y =
+            toString sweepCenter.y
+    in
+        List.concat
+            [ [ circle [ cx (toString faceCenter.x), cy (toString faceCenter.y), r (toString faceRadius), stroke "#BADA55", fill "none" ] [] ]
+            , (beatMarkers beats sweepCenter)
+            , [ circle [ cx x, cy y, r (toString markerRadius), stroke "#666666", fill "none" ] [] ]
+            ]
+
+
+calculateBeats : Int -> List Point
 calculateBeats n =
-    beatReducer [] defaultAngle (360 / toFloat n) n
+    beatReducer [] defaultAngle (tau / toFloat n) n
 
 
-beatReducer accumulator position increment counter =
+beatReducer accumulator angle increment counter =
     if counter <= 0 then
         accumulator
     else
         let
             beat =
-                buildBeat position
+                pointOnFace angle
 
             nextAngle =
-                position + degrees increment
+                angle + increment
 
             nextCounter =
                 counter - 1
@@ -163,38 +195,44 @@ beatReducer accumulator position increment counter =
             beatReducer (beat :: accumulator) nextAngle increment nextCounter
 
 
-buildBeat : Float -> Beat
-buildBeat angle =
+beatMarkers : List Point -> Point -> List (Svg Msg)
+beatMarkers beats sweepCenter =
+    List.map (\beat -> buildMarker beat sweepCenter) beats
+
+
+buildMarker : Point -> Point -> Svg Msg
+buildMarker beat sweepCenter =
     let
         x =
-            50 + 45 * cos angle
-
-        y =
-            50 + 45 * sin angle
-    in
-        Beat x y
-
-
-beatMarkers : List Beat -> List (Svg Msg)
-beatMarkers beats =
-    List.map buildMarker beats
-
-
-buildMarker : Beat -> Svg Msg
-buildMarker beat =
-    let
-        markerX =
             toString beat.x
 
-        markerY =
+        y =
             toString beat.y
+
+        fillColor =
+            if intersects beat sweepCenter then
+                "#fe57a1"
+            else
+                "#999999"
     in
-        circle [ cx markerX, cy markerY, r "3", fill "#999999" ] []
+        circle [ cx x, cy y, r (toString markerRadius), fill fillColor ] []
+
+
+intersects : Point -> Point -> Bool
+intersects point1 point2 =
+    ((point1.x - point2.x) ^ 2 + (point1.y - point2.y) ^ 2) <= markerRadius
 
 
 updatePosition : Model -> Time -> Model
 updatePosition model deltaT =
-    { model | timeDiff = deltaT, angle = (newAngle model) }
+    let
+        angle =
+            newAngle model
+
+        center =
+            pointOnFace angle
+    in
+        { model | timeDiff = deltaT, angle = angle, sweepCenter = center }
 
 
 updateBpm : Model -> Int -> Model
@@ -208,12 +246,9 @@ newAngle model =
 
 
 calculateSpeed : Int -> Int -> Float
-calculateSpeed beats bpm =
+calculateSpeed beatCount bpm =
     let
         rpm =
-            (1 / (toFloat beats)) * (toFloat bpm)
-
-        tau =
-            (2 * pi)
+            (1 / (toFloat beatCount)) * (toFloat bpm)
     in
         tau * (rpm / 60000)

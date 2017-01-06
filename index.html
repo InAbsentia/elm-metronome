@@ -9141,127 +9141,63 @@ var _elm_lang$svg$Svg_Attributes$additive = _elm_lang$virtual_dom$VirtualDom$att
 var _elm_lang$svg$Svg_Attributes$accumulate = _elm_lang$virtual_dom$VirtualDom$attribute('accumulate');
 var _elm_lang$svg$Svg_Attributes$accelerate = _elm_lang$virtual_dom$VirtualDom$attribute('accelerate');
 var _elm_lang$svg$Svg_Attributes$accentHeight = _elm_lang$virtual_dom$VirtualDom$attribute('accent-height');
-var _user$project$Metronome$calculateSpeed = F2(
-	function (beats, bpm) {
-		var tau = 2 * _elm_lang$core$Basics$pi;
-		var rpm = (1 / _elm_lang$core$Basics$toFloat(beats)) * _elm_lang$core$Basics$toFloat(bpm);
-		return tau * (rpm / 60000);
-	});
 var _user$project$Metronome$newAngle = function (model) {
 	return model.angle + (model.timeDiff * model.speed);
 };
-var _user$project$Metronome$updatePosition = F2(
-	function (model, deltaT) {
-		return _elm_lang$core$Native_Utils.update(
-			model,
-			{
-				timeDiff: deltaT,
-				angle: _user$project$Metronome$newAngle(model)
-			});
-	});
-var _user$project$Metronome$buildMarker = function (beat) {
-	var markerY = _elm_lang$core$Basics$toString(beat.y);
-	var markerX = _elm_lang$core$Basics$toString(beat.x);
-	return A2(
-		_elm_lang$svg$Svg$circle,
-		{
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$cx(markerX),
-			_1: {
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$cy(markerY),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$r('3'),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$fill('#999999'),
-						_1: {ctor: '[]'}
-					}
-				}
-			}
-		},
-		{ctor: '[]'});
-};
-var _user$project$Metronome$beatMarkers = function (beats) {
-	return A2(_elm_lang$core$List$map, _user$project$Metronome$buildMarker, beats);
-};
-var _user$project$Metronome$buildFace = F2(
-	function (_p0, beats) {
-		var _p1 = _p0;
-		return _elm_lang$core$List$concat(
-			{
-				ctor: '::',
-				_0: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$svg$Svg$circle,
-						{
-							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$cx('50'),
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$cy('50'),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$r('45'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$stroke('#BADA55'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$fill('none'),
-											_1: {ctor: '[]'}
-										}
-									}
-								}
-							}
-						},
-						{ctor: '[]'}),
-					_1: {ctor: '[]'}
-				},
-				_1: {
-					ctor: '::',
-					_0: _user$project$Metronome$beatMarkers(beats),
-					_1: {
-						ctor: '::',
-						_0: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$svg$Svg$circle,
-								{
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$cx(_p1._0),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$svg$Svg_Attributes$cy(_p1._1),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$r('3'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$svg$Svg_Attributes$stroke('#666666'),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$svg$Svg_Attributes$fill('none'),
-													_1: {ctor: '[]'}
-												}
-											}
-										}
-									}
-								},
-								{ctor: '[]'}),
-							_1: {ctor: '[]'}
-						},
-						_1: {ctor: '[]'}
-					}
-				}
-			});
-	});
 var _user$project$Metronome$defaultBpm = 60;
 var _user$project$Metronome$defaultNoteLength = 4;
 var _user$project$Metronome$defaultBeatCount = 4;
-var _user$project$Metronome$defaultAngle = (3 * _elm_lang$core$Basics$pi) / 2;
+var _user$project$Metronome$faceRadius = 45;
+var _user$project$Metronome$markerRadius = 3;
+var _user$project$Metronome$intersects = F2(
+	function (point1, point2) {
+		return _elm_lang$core$Native_Utils.cmp(
+			Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2),
+			_user$project$Metronome$markerRadius) < 1;
+	});
+var _user$project$Metronome$buildMarker = F2(
+	function (beat, sweepCenter) {
+		var fillColor = A2(_user$project$Metronome$intersects, beat, sweepCenter) ? '#fe57a1' : '#999999';
+		var y = _elm_lang$core$Basics$toString(beat.y);
+		var x = _elm_lang$core$Basics$toString(beat.x);
+		return A2(
+			_elm_lang$svg$Svg$circle,
+			{
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$cx(x),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$cy(y),
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$r(
+							_elm_lang$core$Basics$toString(_user$project$Metronome$markerRadius)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$fill(fillColor),
+							_1: {ctor: '[]'}
+						}
+					}
+				}
+			},
+			{ctor: '[]'});
+	});
+var _user$project$Metronome$beatMarkers = F2(
+	function (beats, sweepCenter) {
+		return A2(
+			_elm_lang$core$List$map,
+			function (beat) {
+				return A2(_user$project$Metronome$buildMarker, beat, sweepCenter);
+			},
+			beats);
+	});
+var _user$project$Metronome$tau = 2 * _elm_lang$core$Basics$pi;
+var _user$project$Metronome$defaultAngle = (3 * _user$project$Metronome$tau) / 4;
+var _user$project$Metronome$calculateSpeed = F2(
+	function (beatCount, bpm) {
+		var rpm = (1 / _elm_lang$core$Basics$toFloat(beatCount)) * _elm_lang$core$Basics$toFloat(bpm);
+		return _user$project$Metronome$tau * (rpm / 60000);
+	});
 var _user$project$Metronome$updateBpm = F2(
 	function (model, newBpm) {
 		return _elm_lang$core$Native_Utils.update(
@@ -9272,62 +9208,116 @@ var _user$project$Metronome$updateBpm = F2(
 				speed: A2(_user$project$Metronome$calculateSpeed, model.beatCount, newBpm)
 			});
 	});
-var _user$project$Metronome$update = F2(
-	function (msg, model) {
-		var _p2 = msg;
-		if (_p2.ctor === 'TimeUpdate') {
-			return {
-				ctor: '_Tuple2',
-				_0: A2(_user$project$Metronome$updatePosition, model, _p2._0),
-				_1: _elm_lang$core$Platform_Cmd$none
-			};
-		} else {
-			var intBpm = function () {
-				var _p3 = _elm_lang$core$String$toInt(_p2._0);
-				if (_p3.ctor === 'Err') {
-					return 0;
-				} else {
-					return _p3._0;
-				}
-			}();
-			return {
-				ctor: '_Tuple2',
-				_0: A2(_user$project$Metronome$updateBpm, model, intBpm),
-				_1: _elm_lang$core$Platform_Cmd$none
-			};
-		}
+var _user$project$Metronome$Model = F8(
+	function (a, b, c, d, e, f, g, h) {
+		return {angle: a, sweepCenter: b, timeDiff: c, beatCount: d, noteLength: e, bpm: f, speed: g, beats: h};
 	});
-var _user$project$Metronome$Model = F7(
-	function (a, b, c, d, e, f, g) {
-		return {angle: a, timeDiff: b, beatCount: c, noteLength: d, bpm: e, speed: f, beats: g};
-	});
-var _user$project$Metronome$Beat = F2(
+var _user$project$Metronome$Point = F2(
 	function (a, b) {
 		return {x: a, y: b};
 	});
-var _user$project$Metronome$buildBeat = function (angle) {
-	var y = 50 + (45 * _elm_lang$core$Basics$sin(angle));
-	var x = 50 + (45 * _elm_lang$core$Basics$cos(angle));
-	return A2(_user$project$Metronome$Beat, x, y);
+var _user$project$Metronome$faceCenter = A2(_user$project$Metronome$Point, 50, 50);
+var _user$project$Metronome$buildFace = function (_p0) {
+	var _p1 = _p0;
+	var _p2 = _p1.sweepCenter;
+	var y = _elm_lang$core$Basics$toString(_p2.y);
+	var x = _elm_lang$core$Basics$toString(_p2.x);
+	return _elm_lang$core$List$concat(
+		{
+			ctor: '::',
+			_0: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$svg$Svg$circle,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$cx(
+							_elm_lang$core$Basics$toString(_user$project$Metronome$faceCenter.x)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$cy(
+								_elm_lang$core$Basics$toString(_user$project$Metronome$faceCenter.y)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$r(
+									_elm_lang$core$Basics$toString(_user$project$Metronome$faceRadius)),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$stroke('#BADA55'),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$fill('none'),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					},
+					{ctor: '[]'}),
+				_1: {ctor: '[]'}
+			},
+			_1: {
+				ctor: '::',
+				_0: A2(_user$project$Metronome$beatMarkers, _p1.beats, _p2),
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$svg$Svg$circle,
+							{
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$cx(x),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$cy(y),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$svg$Svg_Attributes$r(
+											_elm_lang$core$Basics$toString(_user$project$Metronome$markerRadius)),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$svg$Svg_Attributes$stroke('#666666'),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$svg$Svg_Attributes$fill('none'),
+												_1: {ctor: '[]'}
+											}
+										}
+									}
+								}
+							},
+							{ctor: '[]'}),
+						_1: {ctor: '[]'}
+					},
+					_1: {ctor: '[]'}
+				}
+			}
+		});
+};
+var _user$project$Metronome$pointOnFace = function (angle) {
+	var y = _user$project$Metronome$faceCenter.y + (_user$project$Metronome$faceRadius * _elm_lang$core$Basics$sin(angle));
+	var x = _user$project$Metronome$faceCenter.x + (_user$project$Metronome$faceRadius * _elm_lang$core$Basics$cos(angle));
+	return A2(_user$project$Metronome$Point, x, y);
 };
 var _user$project$Metronome$beatReducer = F4(
-	function (accumulator, position, increment, counter) {
+	function (accumulator, angle, increment, counter) {
 		beatReducer:
 		while (true) {
 			if (_elm_lang$core$Native_Utils.cmp(counter, 0) < 1) {
 				return accumulator;
 			} else {
 				var nextCounter = counter - 1;
-				var nextAngle = position + _elm_lang$core$Basics$degrees(increment);
-				var beat = _user$project$Metronome$buildBeat(position);
-				var _v3 = {ctor: '::', _0: beat, _1: accumulator},
-					_v4 = nextAngle,
-					_v5 = increment,
-					_v6 = nextCounter;
-				accumulator = _v3;
-				position = _v4;
-				increment = _v5;
-				counter = _v6;
+				var nextAngle = angle + increment;
+				var beat = _user$project$Metronome$pointOnFace(angle);
+				var _v1 = {ctor: '::', _0: beat, _1: accumulator},
+					_v2 = nextAngle,
+					_v3 = increment,
+					_v4 = nextCounter;
+				accumulator = _v1;
+				angle = _v2;
+				increment = _v3;
+				counter = _v4;
 				continue beatReducer;
 			}
 		}
@@ -9337,7 +9327,7 @@ var _user$project$Metronome$calculateBeats = function (n) {
 		_user$project$Metronome$beatReducer,
 		{ctor: '[]'},
 		_user$project$Metronome$defaultAngle,
-		360 / _elm_lang$core$Basics$toFloat(n),
+		_user$project$Metronome$tau / _elm_lang$core$Basics$toFloat(n),
 		n);
 };
 var _user$project$Metronome$init = function () {
@@ -9347,20 +9337,50 @@ var _user$project$Metronome$init = function () {
 	var speed = A2(_user$project$Metronome$calculateSpeed, beatCount, bpm);
 	var beats = _user$project$Metronome$calculateBeats(beatCount);
 	var timeDiff = 0;
+	var center = _user$project$Metronome$pointOnFace(_user$project$Metronome$defaultAngle);
 	return {
 		ctor: '_Tuple2',
-		_0: A7(_user$project$Metronome$Model, _user$project$Metronome$defaultAngle, timeDiff, beatCount, noteLength, bpm, speed, beats),
+		_0: A8(_user$project$Metronome$Model, _user$project$Metronome$defaultAngle, center, timeDiff, beatCount, noteLength, bpm, speed, beats),
 		_1: _elm_lang$core$Platform_Cmd$none
 	};
 }();
+var _user$project$Metronome$updatePosition = F2(
+	function (model, deltaT) {
+		var angle = _user$project$Metronome$newAngle(model);
+		var center = _user$project$Metronome$pointOnFace(angle);
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{timeDiff: deltaT, angle: angle, sweepCenter: center});
+	});
+var _user$project$Metronome$update = F2(
+	function (msg, model) {
+		var _p3 = msg;
+		if (_p3.ctor === 'TimeUpdate') {
+			return {
+				ctor: '_Tuple2',
+				_0: A2(_user$project$Metronome$updatePosition, model, _p3._0),
+				_1: _elm_lang$core$Platform_Cmd$none
+			};
+		} else {
+			var intBpm = function () {
+				var _p4 = _elm_lang$core$String$toInt(_p3._0);
+				if (_p4.ctor === 'Err') {
+					return 0;
+				} else {
+					return _p4._0;
+				}
+			}();
+			return {
+				ctor: '_Tuple2',
+				_0: A2(_user$project$Metronome$updateBpm, model, intBpm),
+				_1: _elm_lang$core$Platform_Cmd$none
+			};
+		}
+	});
 var _user$project$Metronome$BpmUpdate = function (a) {
 	return {ctor: 'BpmUpdate', _0: a};
 };
 var _user$project$Metronome$view = function (model) {
-	var newY = _elm_lang$core$Basics$toString(
-		50 + (45 * _elm_lang$core$Basics$sin(model.angle)));
-	var newX = _elm_lang$core$Basics$toString(
-		50 + (45 * _elm_lang$core$Basics$cos(model.angle)));
 	return A2(
 		_elm_lang$html$Html$div,
 		{ctor: '[]'},
@@ -9475,10 +9495,7 @@ var _user$project$Metronome$view = function (model) {
 								_1: {ctor: '[]'}
 							}
 						},
-						A2(
-							_user$project$Metronome$buildFace,
-							{ctor: '_Tuple2', _0: newX, _1: newY},
-							model.beats)),
+						_user$project$Metronome$buildFace(model)),
 					_1: {ctor: '[]'}
 				}
 			}
