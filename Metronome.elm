@@ -23,7 +23,6 @@ type alias Model =
     , sweepCenter : Point
     , timeDiff : Time
     , beatCount : Int
-    , noteLength : Int
     , bpm : Int
     , speed : Float
     , beats : List Point
@@ -60,10 +59,6 @@ defaultBeatCount =
     4
 
 
-defaultNoteLength =
-    4
-
-
 defaultBpm =
     60
 
@@ -80,9 +75,6 @@ init =
         beatCount =
             defaultBeatCount
 
-        noteLength =
-            defaultNoteLength
-
         bpm =
             defaultBpm
 
@@ -92,7 +84,7 @@ init =
         beats =
             calculateBeats beatCount
     in
-        ( (Model defaultAngle center timeDiff beatCount noteLength bpm speed beats), Cmd.none )
+        ( (Model defaultAngle center timeDiff beatCount bpm speed beats), Cmd.none )
 
 
 pointOnFace : Float -> Point
@@ -110,6 +102,7 @@ pointOnFace angle =
 type Msg
     = TimeUpdate Time
     | BpmUpdate String
+    | BeatUpdate String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -130,6 +123,18 @@ update msg model =
             in
                 ( (updateBpm model intBpm), Cmd.none )
 
+        BeatUpdate newBeatCount ->
+            let
+                beatCount =
+                    case String.toInt newBeatCount of
+                        Err msg ->
+                            defaultBeatCount
+
+                        Ok converted ->
+                            converted
+            in
+                ( (updateBeatCount model beatCount), Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -147,10 +152,8 @@ view model =
             ]
         , div []
             [ label []
-                [ Html.text "Time Signature"
-                , input [ type_ "text", disabled True, value (toString model.beatCount) ] []
-                , Html.text " / "
-                , input [ type_ "text", disabled True, value (toString model.noteLength) ] []
+                [ Html.text "Beat Count"
+                , input [ type_ "text", value (toString model.beatCount), onInput BeatUpdate ] []
                 ]
             ]
         , svg [ viewBox "0 0 100 100", width "300px" ] (buildFace model)
@@ -238,6 +241,18 @@ updatePosition model deltaT =
 updateBpm : Model -> Int -> Model
 updateBpm model newBpm =
     { model | bpm = newBpm, angle = defaultAngle, speed = (calculateSpeed model.beatCount newBpm) }
+
+
+updateBeatCount : Model -> Int -> Model
+updateBeatCount model beatCount =
+    let
+        beats =
+            calculateBeats beatCount
+
+        speed =
+            calculateSpeed beatCount model.bpm
+    in
+        { model | beatCount = beatCount, beats = beats, angle = defaultAngle, speed = speed }
 
 
 newAngle : Model -> Float

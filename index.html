@@ -9145,7 +9145,6 @@ var _user$project$Metronome$newAngle = function (model) {
 	return model.angle + (model.timeDiff * model.speed);
 };
 var _user$project$Metronome$defaultBpm = 60;
-var _user$project$Metronome$defaultNoteLength = 4;
 var _user$project$Metronome$defaultBeatCount = 4;
 var _user$project$Metronome$faceRadius = 45;
 var _user$project$Metronome$markerRadius = 3;
@@ -9208,9 +9207,9 @@ var _user$project$Metronome$updateBpm = F2(
 				speed: A2(_user$project$Metronome$calculateSpeed, model.beatCount, newBpm)
 			});
 	});
-var _user$project$Metronome$Model = F8(
-	function (a, b, c, d, e, f, g, h) {
-		return {angle: a, sweepCenter: b, timeDiff: c, beatCount: d, noteLength: e, bpm: f, speed: g, beats: h};
+var _user$project$Metronome$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {angle: a, sweepCenter: b, timeDiff: c, beatCount: d, bpm: e, speed: f, beats: g};
 	});
 var _user$project$Metronome$Point = F2(
 	function (a, b) {
@@ -9332,7 +9331,6 @@ var _user$project$Metronome$calculateBeats = function (n) {
 };
 var _user$project$Metronome$init = function () {
 	var bpm = _user$project$Metronome$defaultBpm;
-	var noteLength = _user$project$Metronome$defaultNoteLength;
 	var beatCount = _user$project$Metronome$defaultBeatCount;
 	var speed = A2(_user$project$Metronome$calculateSpeed, beatCount, bpm);
 	var beats = _user$project$Metronome$calculateBeats(beatCount);
@@ -9340,10 +9338,18 @@ var _user$project$Metronome$init = function () {
 	var center = _user$project$Metronome$pointOnFace(_user$project$Metronome$defaultAngle);
 	return {
 		ctor: '_Tuple2',
-		_0: A8(_user$project$Metronome$Model, _user$project$Metronome$defaultAngle, center, timeDiff, beatCount, noteLength, bpm, speed, beats),
+		_0: A7(_user$project$Metronome$Model, _user$project$Metronome$defaultAngle, center, timeDiff, beatCount, bpm, speed, beats),
 		_1: _elm_lang$core$Platform_Cmd$none
 	};
 }();
+var _user$project$Metronome$updateBeatCount = F2(
+	function (model, beatCount) {
+		var speed = A2(_user$project$Metronome$calculateSpeed, beatCount, model.bpm);
+		var beats = _user$project$Metronome$calculateBeats(beatCount);
+		return _elm_lang$core$Native_Utils.update(
+			model,
+			{beatCount: beatCount, beats: beats, angle: _user$project$Metronome$defaultAngle, speed: speed});
+	});
 var _user$project$Metronome$updatePosition = F2(
 	function (model, deltaT) {
 		var angle = _user$project$Metronome$newAngle(model);
@@ -9355,28 +9361,46 @@ var _user$project$Metronome$updatePosition = F2(
 var _user$project$Metronome$update = F2(
 	function (msg, model) {
 		var _p3 = msg;
-		if (_p3.ctor === 'TimeUpdate') {
-			return {
-				ctor: '_Tuple2',
-				_0: A2(_user$project$Metronome$updatePosition, model, _p3._0),
-				_1: _elm_lang$core$Platform_Cmd$none
-			};
-		} else {
-			var intBpm = function () {
-				var _p4 = _elm_lang$core$String$toInt(_p3._0);
-				if (_p4.ctor === 'Err') {
-					return 0;
-				} else {
-					return _p4._0;
-				}
-			}();
-			return {
-				ctor: '_Tuple2',
-				_0: A2(_user$project$Metronome$updateBpm, model, intBpm),
-				_1: _elm_lang$core$Platform_Cmd$none
-			};
+		switch (_p3.ctor) {
+			case 'TimeUpdate':
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Metronome$updatePosition, model, _p3._0),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'BpmUpdate':
+				var intBpm = function () {
+					var _p4 = _elm_lang$core$String$toInt(_p3._0);
+					if (_p4.ctor === 'Err') {
+						return 0;
+					} else {
+						return _p4._0;
+					}
+				}();
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Metronome$updateBpm, model, intBpm),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			default:
+				var beatCount = function () {
+					var _p5 = _elm_lang$core$String$toInt(_p3._0);
+					if (_p5.ctor === 'Err') {
+						return _user$project$Metronome$defaultBeatCount;
+					} else {
+						return _p5._0;
+					}
+				}();
+				return {
+					ctor: '_Tuple2',
+					_0: A2(_user$project$Metronome$updateBeatCount, model, beatCount),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
 		}
 	});
+var _user$project$Metronome$BeatUpdate = function (a) {
+	return {ctor: 'BeatUpdate', _0: a};
+};
 var _user$project$Metronome$BpmUpdate = function (a) {
 	return {ctor: 'BpmUpdate', _0: a};
 };
@@ -9433,7 +9457,7 @@ var _user$project$Metronome$view = function (model) {
 							{ctor: '[]'},
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html$text('Time Signature'),
+								_0: _elm_lang$html$Html$text('Beat Count'),
 								_1: {
 									ctor: '::',
 									_0: A2(
@@ -9443,41 +9467,17 @@ var _user$project$Metronome$view = function (model) {
 											_0: _elm_lang$svg$Svg_Attributes$type_('text'),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$disabled(true),
+												_0: _elm_lang$html$Html_Attributes$value(
+													_elm_lang$core$Basics$toString(model.beatCount)),
 												_1: {
 													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$value(
-														_elm_lang$core$Basics$toString(model.beatCount)),
+													_0: _elm_lang$html$Html_Events$onInput(_user$project$Metronome$BeatUpdate),
 													_1: {ctor: '[]'}
 												}
 											}
 										},
 										{ctor: '[]'}),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(' / '),
-										_1: {
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$input,
-												{
-													ctor: '::',
-													_0: _elm_lang$svg$Svg_Attributes$type_('text'),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$disabled(true),
-														_1: {
-															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$value(
-																_elm_lang$core$Basics$toString(model.noteLength)),
-															_1: {ctor: '[]'}
-														}
-													}
-												},
-												{ctor: '[]'}),
-											_1: {ctor: '[]'}
-										}
-									}
+									_1: {ctor: '[]'}
 								}
 							}),
 						_1: {ctor: '[]'}
