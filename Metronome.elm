@@ -1,8 +1,8 @@
 module Metronome exposing (..)
 
-import Html exposing (Html, div, input, label)
+import Html exposing (Html, div, input, label, button)
 import Html.Attributes exposing (disabled, value)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onInput, onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Time exposing (Time)
@@ -19,7 +19,8 @@ main =
 
 
 type alias Model =
-    { angle : Float
+    { running : Bool
+    , angle : Float
     , sweepCenter : Point
     , timeDiff : Time
     , beatCount : Int
@@ -84,7 +85,7 @@ init =
         beats =
             calculateBeats beatCount
     in
-        ( (Model defaultAngle center timeDiff beatCount bpm speed beats), Cmd.none )
+        ( (Model False defaultAngle center timeDiff beatCount bpm speed beats), Cmd.none )
 
 
 pointOnFace : Float -> Point
@@ -103,6 +104,8 @@ type Msg
     = TimeUpdate Time
     | BpmUpdate String
     | BeatUpdate String
+    | StartRunning
+    | StopRunning
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -135,10 +138,26 @@ update msg model =
             in
                 ( (updateBeatCount model beatCount), Cmd.none )
 
+        StartRunning ->
+            ( { model | running = True }, Cmd.none )
+
+        StopRunning ->
+            ( (updatePosition (resetModel model) 0), Cmd.none )
+
+
+resetModel : Model -> Model
+resetModel model =
+    { model | running = False, angle = defaultAngle }
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    AnimationFrame.diffs TimeUpdate
+    case model.running of
+        True ->
+            AnimationFrame.diffs TimeUpdate
+
+        False ->
+            Sub.none
 
 
 view : Model -> Html Msg
@@ -156,8 +175,19 @@ view model =
                 , input [ type_ "text", value (toString model.beatCount), onInput BeatUpdate ] []
                 ]
             ]
+        , div [] [ startButton model.running ]
         , svg [ viewBox "0 0 100 100", width "300px" ] (buildFace model)
         ]
+
+
+startButton : Bool -> Html Msg
+startButton running =
+    case running of
+        True ->
+            button [ onClick StopRunning ] [ text "Stop" ]
+
+        False ->
+            button [ onClick StartRunning ] [ text "Start" ]
 
 
 buildFace : Model -> List (Svg Msg)
@@ -230,7 +260,7 @@ updatePosition : Model -> Time -> Model
 updatePosition model deltaT =
     let
         angle =
-            newAngle model
+            newAngle model deltaT
 
         center =
             pointOnFace angle
@@ -255,9 +285,9 @@ updateBeatCount model beatCount =
         { model | beatCount = beatCount, beats = beats, angle = defaultAngle, speed = speed }
 
 
-newAngle : Model -> Float
-newAngle model =
-    model.angle + model.timeDiff * model.speed
+newAngle : Model -> Time -> Float
+newAngle { angle, speed } deltaT =
+    angle + deltaT * speed
 
 
 calculateSpeed : Int -> Int -> Float
